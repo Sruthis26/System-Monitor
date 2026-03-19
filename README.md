@@ -1,4 +1,4 @@
-## Project 1 — System Monitoring Dashboard
+## System Monitoring Dashboard
  
 ### Overview
 A real-time system health dashboard that tracks CPU, RAM, and disk usage with live charts, threshold-based alerting, and a top-process table — all accessible from a browser.
