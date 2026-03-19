@@ -1,34 +1,15 @@
-"""
-=============================================================
-  System Monitoring Dashboard
-  Tech : Python · Flask · Chart.js · psutil
-  Role : Associate Tech Operations — JD points 1, 2, 4, 7
-=============================================================
-  Run:
-    pip install flask psutil
-    python system_monitor.py
-    open http://localhost:5000
 
-  What it does (maps to JD):
-  - Monitors CPU, RAM, disk in real time           → "Monitor health & performance"
-  - Threshold alerts (CPU>85%, RAM>90%)            → "Resolve incidents / detect overload"
-  - REST API endpoint for metrics                  → "Deploy & manage applications"
-  - Rolling history + top-process table            → "Root cause analysis"
-  - Circuit-style alert deduplication              → "System reliability"
-"""
 
 from flask import Flask, jsonify, render_template_string
 import psutil, datetime, collections, threading, time
 
 app = Flask(__name__)
 
-# ── Config ────────────────────────────────────────────────────────────────────
 POLL_INTERVAL   = 5          # seconds between readings
 HISTORY_LEN     = 60         # rolling window (~5 min)
 THRESHOLDS      = {"cpu": 85.0, "ram": 90.0, "disk": 80.0}
 MAX_ALERTS      = 50
 
-# ── Shared state (thread-safe) ────────────────────────────────────────────────
 _lock   = threading.Lock()
 history = {
     "labels": collections.deque(maxlen=HISTORY_LEN),
@@ -38,8 +19,6 @@ history = {
 }
 alerts = []      # list of dicts, newest appended
 
-
-# ── Background collector ──────────────────────────────────────────────────────
 def _collect():
     """Runs forever in a daemon thread; samples system metrics."""
     while True:
@@ -67,8 +46,6 @@ def _collect():
 
         time.sleep(POLL_INTERVAL)
 
-
-# ── REST API ──────────────────────────────────────────────────────────────────
 @app.route("/api/metrics")
 def api_metrics():
     with _lock:
@@ -96,8 +73,6 @@ def api_processes():
         rows.append(p.info)
     return jsonify(rows)
 
-
-# ── Dashboard HTML (single-file, no extra assets) ─────────────────────────────
 _HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -220,8 +195,6 @@ setInterval(refresh,5000); setInterval(refreshProcs,15000);
 def index():
     return render_template_string(_HTML)
 
-
-# ── Entry point ───────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     threading.Thread(target=_collect, daemon=True).start()
     print("✓ Dashboard → http://localhost:5000")
